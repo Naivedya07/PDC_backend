@@ -9,13 +9,10 @@ load_dotenv()
 
 app = Flask(__name__)
 # Initialize CORS with your Flask app
-# Allow requests from your frontend and local development
+# Allow requests from any origin for testing (you can restrict this later)
 CORS(app, resources={
     r"/*": {
-        "origins": [
-            "http://localhost:8000",  # Local development
-            "https://plant-disease-classifier-frontend.onrender.com"  # Your deployed frontend
-        ],
+        "origins": ["*"],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type"]
     }
@@ -55,4 +52,5 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 5000))  # Use PORT from environment or default to 5000
     debug_mode = os.getenv("FLASK_DEBUG", "False").lower() == "true"
     app.run(host="0.0.0.0", port=port, debug=debug_mode)
+
 
