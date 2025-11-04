@@ -2,6 +2,7 @@ services:
   - type: web
     name: plant-disease-classifier-backend
     env: python
+    runtime: python-3.10.12
     buildCommand: "pip install -r requirements.txt"
     startCommand: "python app.py"
     envVars:
