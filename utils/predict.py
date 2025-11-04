@@ -3,6 +3,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 from io import BytesIO
+import tensorflow as tf
 
 # Load model path from .env
 MODEL_PATH = os.getenv("MODEL_PATH", "model/plant_disease_model.h5")
@@ -27,7 +28,16 @@ class_names = [
 ]
 
 def load_model_and_predict(img_file):
-    model = load_model(MODEL_PATH)
+    try:
+        # Load model with custom objects if needed
+        model = load_model(MODEL_PATH, compile=False)
+    except Exception as e:
+        # If there's a compatibility issue, try loading without custom objects
+        print(f"Model loading error: {e}")
+        try:
+            model = tf.keras.models.load_model(MODEL_PATH, compile=False)
+        except Exception as e2:
+            raise Exception(f"Failed to load model: {e2}")
 
     # Read image from uploaded file
     img_stream = BytesIO(img_file.read())
