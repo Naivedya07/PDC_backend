@@ -9,28 +9,48 @@ load_dotenv()
 
 app = Flask(__name__)
 # Initialize CORS with your Flask app
-# Allow requests from any origin for testing (you can restrict this later)
 CORS(app, resources={
     r"/*": {
-        "origins": ["*"],
+        "origins": ["https://plant-disease-classifier-frontend.onrender.com", "*"],
         "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True
     }
 })
 
-@app.route("/predict", methods=["POST"])
-def predict():
-    if 'image' not in request.files:
-        return jsonify({"error": "No image provided"}), 400
+# Add explicit CORS headers for all responses
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
-    img_file = request.files['image']
+@app.route("/predict", methods=["POST", "OPTIONS"])
+def predict():
+    # Handle preflight OPTIONS request
+    if request.method == "OPTIONS":
+        response = jsonify({"status": "ok"})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        return response
+    
     try:
+        if 'image' not in request.files:
+            response = jsonify({"error": "No image provided"})
+            response.status_code = 400
+            return response
+
+        img_file = request.files['image']
         result = load_model_and_predict(img_file)
         return jsonify({"prediction": result})
     except Exception as e:
         # Log the full exception for debugging on Render
         app.logger.error("Error during prediction: %s", str(e), exc_info=True)
-        return jsonify({"error": f"Internal server error during prediction: {str(e)}"}), 500
+        response = jsonify({"error": f"Internal server error during prediction: {str(e)}"})
+        response.status_code = 500
+        return response
 
 @app.route("/", methods=["GET"])
 def health_check():
