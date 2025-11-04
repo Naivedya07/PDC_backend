@@ -9,10 +9,14 @@ load_dotenv()
 
 app = Flask(__name__)
 # Initialize CORS with your Flask app
-# Allow requests from your frontend's specific origin
-CORS(app, resources={r"/predict": {"origins": "https://plant-disease-classifier-6tuw.onrender.com"}})
-# If you want to allow requests from any origin (less secure for production but good for testing initially)
-# CORS(app)
+# Allow requests from any origin for testing (you can restrict this later)
+CORS(app, resources={
+    r"/*": {
+        "origins": ["*"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -28,8 +32,24 @@ def predict():
         app.logger.error("Error during prediction: %s", str(e), exc_info=True)
         return jsonify({"error": f"Internal server error during prediction: {str(e)}"}), 500
 
+@app.route("/", methods=["GET"])
+def health_check():
+    """Health check endpoint for Render"""
+    return jsonify({
+        "status": "healthy",
+        "message": "Plant Disease Classifier API is running",
+        "endpoints": {
+            "predict": "/predict"
+        }
+    })
+
+@app.route("/health", methods=["GET"])
+def health():
+    """Additional health check endpoint"""
+    return jsonify({"status": "ok", "service": "plant-disease-classifier"})
+
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5000))  # Default port is 5000
+    port = int(os.getenv("PORT", 5000))  # Use PORT from environment or default to 5000
     debug_mode = os.getenv("FLASK_DEBUG", "False").lower() == "true"
     app.run(host="0.0.0.0", port=port, debug=debug_mode)
 
