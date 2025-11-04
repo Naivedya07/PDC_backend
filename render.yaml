@@ -1,9 +1,13 @@
 services:
   - type: web
-    name: pdc-backend
+    name: plant-disease-classifier-backend
     env: python
-    buildCommand: ""
-    startCommand: python app.py
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python app.py"
     envVars:
       - key: PORT
         value: 10000
+      - key: FLASK_DEBUG
+        value: false
+      - key: MODEL_PATH
+        value: "model/plant_disease_model.h5"
